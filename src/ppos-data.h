@@ -11,6 +11,7 @@
 #include <ucontext.h>		// biblioteca POSIX de trocas de contexto
 #include "queue.h"		// biblioteca de filas genéricas
 
+struct mutex_t;
 // Estrutura que define um Task Control Block (TCB)
 typedef struct task_t
 {
@@ -31,15 +32,18 @@ typedef struct task_t
 
 } task_t ;
 
-// estrutura que define um semáforo
-typedef struct {
-   
-} semaphore_t ;
-
 // estrutura que define um mutex
 typedef struct {
-    
+	int lock;
 } mutex_t ;
+
+// estrutura que define um semáforo
+typedef struct {
+	int count;
+	queue_t* queue;
+	mutex_t mutex_1;
+	mutex_t mutex_2;
+} semaphore_t ;
 
 // estrutura que define uma barreira
 typedef struct {

@@ -16,8 +16,9 @@
 
 typedef struct queue_t
 {
-   struct queue_t *prev ;  // aponta para o elemento anterior na fila
-   struct queue_t *next ;  // aponta para o elemento seguinte na fila
+	struct queue_t *prev ;  // aponta para o elemento anterior na fila
+	struct queue_t *next ;  // aponta para o elemento seguinte na fila
+	int id ;
 } queue_t ;
 
 //------------------------------------------------------------------------------

@@ -6,8 +6,170 @@
 // ****************************************************************************
 // Coloque as suas modificações aqui, 
 // p.ex. includes, defines variáveis, // estruturas e funções
+#include <stdlib.h>
+// Implementações MUTEX
+#define TRUE 1
+#define FALSE 0
+
+void task_wait(semaphore_t *s);
+int queue_contains(queue_t **queue, int id);
+queue_t* create_element(int content);
+queue_t* dequeue(queue_t **queue);
+
+// Mutex Functions
+int mutex_create(mutex_t *m)
+{
+    if (m == NULL) return -1;
+    m->lock = 0;
+    return 0;
+}
+
+int mutex_lock(mutex_t *m)
+{
+    if (m == NULL) return -1;
+    while (__atomic_test_and_set(&(m->lock), __ATOMIC_SEQ_CST)) {
+        task_yield();
+    }
+    return 0;
+}
+
+int mutex_unlock(mutex_t *m)
+{
+    if (m == NULL) return -1;
+    m->lock = 0;
+    return 0;
+}
+
+int mutex_destroy(mutex_t *m)
+{
+    if (m == NULL) return -1;
+    return 0;
+}
+
+// Semaphore Functions
+int sem_create(semaphore_t *s, int value)
+{
+    if (s == NULL) return -1;
+    s->queue = NULL;
+    s->count = value;
+    
+    if (mutex_create(&s->mutex_1) != 0 || mutex_create(&s->mutex_2) != 0) {
+        return -1;
+    }
+
+    return 0;  // Semaphore created successfully
+}
+
+int sem_down(semaphore_t *s)
+{
+    if (s == NULL) return -1;
+    mutex_lock(&s->mutex_1);
+
+    s->count--;
+    if (s->count < 0) {
+        queue_t *e = create_element(task_id());
+        queue_append(&(s->queue), e);
+        mutex_unlock(&s->mutex_1);
+        task_wait(s);
+        mutex_lock(&s->mutex_1);
+    }
+    mutex_unlock(&s->mutex_1);
+
+    return 0;
+}
+
+int sem_up(semaphore_t *s)
+{
+    if (s == NULL) return 0;
+    mutex_lock(&s->mutex_1);
+
+    s->count++;
+	
+    if (s->count <= 0) {
+        queue_t *e = dequeue(&(s->queue));
+    }
+
+    mutex_unlock(&s->mutex_1);
+    return 1;
+}
+
+int sem_destroy(semaphore_t *s)
+{
+    if (s == NULL) return -1;
+
+    mutex_destroy(&s->mutex_1);
+    mutex_destroy(&s->mutex_2);
+    return 0;
+}
+
+void task_wait(semaphore_t *s){
+	mutex_lock(&s->mutex_2);
+	while(queue_contains(&(s->queue), task_id())){
+		mutex_unlock(&s->mutex_2);
+		task_yield();
+		mutex_lock(&s->mutex_2);
+		
+	}
+	mutex_unlock(&s->mutex_2);
+}
 
 
+int queue_contains(queue_t **queue, int id)
+{
+    if (queue == NULL || *queue == NULL) {
+        return 0;
+    }
+	queue_t * queue_head = *queue;
+	queue_t * queue_it = *queue;
+	do{
+		if(queue_it->id == id)
+			return 1;
+		queue_it = queue_it->next;
+	}
+	while(queue_head != queue_it);
+	return 0;
+}
+
+void imprimir(queue_t *queue){
+	if(queue == NULL)
+		return 0;
+
+	queue_t *it = queue;
+	int i = 1;
+	do
+	{
+		printf("Elemento(%d): %d \n",i, queue->id);
+		queue = queue->next;
+	}
+	while(queue!=it);
+}
+
+queue_t* create_element(int content){
+	queue_t* e = (queue_t*) malloc(sizeof(queue_t));
+	if(e == NULL)
+		return NULL;
+	e->id = content;
+	return e;
+}
+queue_t* dequeue(queue_t **queue) {
+    if (queue == NULL || *queue == NULL) {
+        return NULL;
+    }
+    queue_t *queue_head = *queue;
+    if (queue_head == queue_head->next)
+	{
+        *queue = NULL;
+    } 
+	else 
+	{
+        *queue = queue_head->next;
+		queue_head->prev->next= queue_head->next;
+        (*queue)->prev = NULL;
+    }
+    queue_head->next = NULL;
+    queue_head->prev = NULL;
+    return queue_head;
+}
 
 void before_ppos_init () {
     // put your customization here

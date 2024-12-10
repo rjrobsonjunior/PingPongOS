@@ -39,7 +39,9 @@ int main (int argc, char *argv[])
 {
    printf ("Main INICIO\n") ;
 
+	before_ppos_init();
    ppos_init();
+	after_ppos_init();
    
    sem_create (&s1, 1) ;
    sem_create (&s2, 0) ;
@@ -69,6 +71,7 @@ int main (int argc, char *argv[])
 
    printf ("Main FIM\n") ;
    task_exit (0) ;
+
 
    exit (0) ;
 }

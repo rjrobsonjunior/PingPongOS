@@ -103,7 +103,7 @@ int sem_destroy(semaphore_t* s) {
 
     after_sem_destroy(s);
 
-    PPOS_PREEMPT_ENABLE; // Retoma preempção
+   PPOS_PREEMPT_ENABLE; // Retoma preempção
 
     return 0;
 }

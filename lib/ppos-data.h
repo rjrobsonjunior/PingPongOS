@@ -35,14 +35,15 @@ typedef struct task_t
 // estrutura que define um mutex
 typedef struct {
 	int lock;
+    int active;
 } mutex_t ;
 
 // estrutura que define um semáforo
 typedef struct {
 	int count;
 	queue_t* queue;
-	mutex_t mutex_1;
-	mutex_t mutex_2;
+	mutex_t mutex;
+    int active;
 } semaphore_t ;
 
 // estrutura que define uma barreira

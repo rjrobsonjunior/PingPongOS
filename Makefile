@@ -1,19 +1,32 @@
-TARGET = pingpongos
+TARGET = pingpongos-semaphore
+TARGET_QUEUE = pingpongos-mqueue
+TARGET_RACECOND = pingpongos-racecond
 
 SRC = ./src/ppos-core-aux.c ./src/testes/pingpong-semaphore.c 
+SRC_QUEUE = ./src/ppos-core-aux.c ./src/testes/pingpong-mqueue.c
+SRC_RACECOND = ./src/ppos-core-aux.c ./src/testes/pingpong-racecond.c
 
 OBJ = $(wildcard ./objects/*.o)
 
 LIB = ./libppos_static.a
 
 CC = gcc
+INC=-I./lib
 
 CFLAGS = -o $(TARGET) -Wall
+CFLAGS_QUEUE = -o $(TARGET_QUEUE) -Wall
+CFLAGS_RACECOND= -o $(TARGET_RACECOND) -Wall
 
 all: build run
 
-build:build_lib
-	$(CC) $(CFLAGS) $(SRC) $(LIB) -lm
+build-semaphore:build_lib
+	$(CC) $(CFLAGS) $(SRC) $(LIB) $(INC) -lm
+
+build-queue:build_lib
+	$(CC) $(CFLAGS_QUEUE) $(SRC_QUEUE) $(LIB) $(INC) -lm
+
+build-racecond:build_lib
+	$(CC) $(CFLAGS_RACECOND) $(SRC_RACECOND) $(LIB) $(INC) -lm
 
 run: build
 	./$(TARGET)

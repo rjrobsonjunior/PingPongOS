@@ -41,7 +41,7 @@ typedef struct {
 // estrutura que define um semáforo
 typedef struct {
 	int count;
-	queue_t* queue;
+	task_t* queue;
 	mutex_t mutex;
     int active;
 } semaphore_t ;

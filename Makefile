@@ -1,6 +1,6 @@
 TARGET = pingpongos
 
-SRC = ./src/ppos-core-aux.c ./src/testes/pingpong-semaphore.c
+SRC = ./src/ppos-core-aux.c ./src/testes/pingpong-semaphore.c 
 
 OBJ = $(wildcard ./objects/*.o)
 

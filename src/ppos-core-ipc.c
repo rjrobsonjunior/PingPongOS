@@ -1,5 +1,5 @@
-#include "ppos.h"
-#include "ppos-core-globals.h"
+#include "../lib/ppos.h"
+#include "../lib/ppos-core-globals.h"
 
 int sem_create(semaphore_t* s, int value) {
     if (s == NULL) {

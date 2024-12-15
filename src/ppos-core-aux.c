@@ -1,7 +1,7 @@
 #include "../lib/ppos.h"
 #include "../lib/ppos-core-globals.h"
 #include "../lib/ppos-disk-manager.h"
-
+//#define DEBUG
 
 // ****************************************************************************
 // Coloque as suas modificações aqui, 
@@ -30,8 +30,10 @@ int mutex_lock(mutex_t *m)
     if (m == NULL) return -1;
     if (m->active == 0) return -1;
     while (__atomic_test_and_set(&(m->lock), __ATOMIC_SEQ_CST))
+    {
         if (m->active == 0) return -1; 
         task_yield();
+    }
     return 0;
 }
 
@@ -69,6 +71,8 @@ int sem_down(semaphore_t *s)
     
     if(mutex_lock(&s->mutex) == -1) return -1;
 
+    before_sem_down(s);
+
     s->count--;
     if (s->count < 0) {
         task_suspend(taskExec, (task_t**)&(s->queue));
@@ -77,6 +81,8 @@ int sem_down(semaphore_t *s)
         return 0;
     }
     if(mutex_unlock(&s->mutex) == -1) return -1;
+
+    after_sem_down(s);
     return 0;
 }
 
@@ -87,9 +93,7 @@ int sem_up(semaphore_t *s)
 
     s->count++;
     if (s->count <= 0) {
-        task_t *task = (task_t*) dequeue(&(s->queue));
-        if(task == NULL) return -1;
-        task_resume(task);
+        task_resume(s->queue);
     }
     mutex_unlock(&s->mutex);
     return 0;
@@ -99,10 +103,8 @@ int sem_destroy(semaphore_t *s)
 {
     if (s == NULL) return -1;
     if (mutex_destroy(&s->mutex) == -1) return -1;
-    task_t* task = (task_t*) dequeue(&(s->queue));
-    while(task != NULL){
-        task_resume(task);
-        task = (task_t*) dequeue(&(s->queue));
+    while(s->queue != NULL){
+        task_resume(s->queue);
     }
     s->active = 0;        
     return 0;

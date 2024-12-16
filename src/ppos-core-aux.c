@@ -1,6 +1,6 @@
-#include "../lib/ppos.h"
-#include "../lib/ppos-core-globals.h"
-#include "../lib/ppos-disk-manager.h"
+#include "ppos.h"
+#include "ppos-core-globals.h"
+#include "ppos-disk-manager.h"
 //#define DEBUG
 
 // ****************************************************************************
@@ -16,7 +16,144 @@ int queue_contains(queue_t **queue, int id);
 queue_t* create_element(task_t *task);
 queue_t* dequeue(queue_t **queue);
 
-// Mutex Functions
+
+#ifdef PREEMPT_MODE
+    
+    int sem_create(semaphore_t* s, int value) 
+    {
+        if (s == NULL) return -1;
+        PPOS_PREEMPT_DISABLE;
+        s->queue = NULL;
+        s->value = value;
+        s->active = 1;
+        PPOS_PREEMPT_ENABLE;
+        return 0;
+    }
+
+    
+    int sem_down(semaphore_t* s) 
+    {
+        if (s == NULL) return -1;
+        if (s->active == 0) return -1;
+
+        PPOS_PREEMPT_DISABLE;
+        s->value--;
+        if (s->value < 0) 
+        {
+            task_suspend(taskExec, &(s->queue));
+            PPOS_PREEMPT_ENABLE;
+            task_yield();
+        }
+        else
+        {
+            PPOS_PREEMPT_ENABLE;
+        }
+        return 0;
+    }
+
+
+    int sem_up(semaphore_t* s) 
+    {
+        if (s == NULL) return -1;
+        if (s->active == 0) return -1;
+        PPOS_PREEMPT_DISABLE; 
+
+        s->value++;
+        if (s->value <= 0) {
+            task_resume(s->queue);
+        }
+
+        PPOS_PREEMPT_ENABLE;
+        return 0;
+    }
+
+    int sem_destroy(semaphore_t* s) 
+    {
+        if (s == NULL) return -1;
+        if (s->active == 0) return -1;
+        
+        PPOS_PREEMPT_DISABLE;
+        s->active = 0;
+        while (s->queue != NULL) {
+            task_resume(s->queue);
+        }
+
+        PPOS_PREEMPT_ENABLE;
+        return 0;
+    }
+#else
+    int sem_create(semaphore_t *s, int value)
+    {
+        if (s == NULL) return -1;
+        s->queue = NULL;
+        s->value = value;
+        s->active = 1;
+        
+        if (mutex_create(&(s->mutex_union.mutex)) != 0)
+            return -1;
+        return 0;  
+    }
+
+
+    int sem_down(semaphore_t *s)
+    {
+        if (s == NULL) return -1;
+        if (s->active == 0) return -1;
+        
+        if(mutex_lock(&(s->mutex_union.mutex)) == -1) return -1;
+
+        before_sem_down(s);
+        s->value--;
+        if (s->value < 0) {
+            task_suspend(taskExec, (task_t**)&(s->queue));
+            if(mutex_unlock(&(s->mutex_union.mutex)) == -1) return -1;
+            task_yield();
+            return 0;
+        }
+        if(mutex_unlock(&(s->mutex_union.mutex)) == -1) return -1;
+
+        after_sem_down(s);
+        return 0;
+    }
+
+    int sem_up(semaphore_t *s)
+    {
+        if (s == NULL) return -1;
+        if (mutex_lock(&(s->mutex_union.mutex))) return -1;
+
+        s->value++;
+        if (s->value <= 0) {
+            task_resume(s->queue);
+        }
+        mutex_unlock(&(s->mutex_union.mutex));
+        return 0;
+    }
+
+    int sem_destroy(semaphore_t *s)
+    {
+        if (s == NULL) return -1;
+        if (mutex_destroy(&(s->mutex_union.mutex)) == -1) return -1;
+        while(s->queue != NULL){
+            task_resume(s->queue);
+        }
+        s->active = 0;        
+        return 0;
+    }
+#endif
+
+/** ---------------------------------------------------------------------------------
+ *                                      MUTEX FUNCTIONS
+  ---------------------------------------------------------------------------------*/
+
+int test_and_set (volatile int *lock)
+{
+    PPOS_PREEMPT_DISABLE;
+    int old = *lock;
+    *lock = 1;
+    PPOS_PREEMPT_ENABLE;
+    return old;
+}
+
 int mutex_create(mutex_t *m)
 {
     if (m == NULL) return -1;
@@ -29,6 +166,18 @@ int mutex_lock(mutex_t *m)
 {
     if (m == NULL) return -1;
     if (m->active == 0) return -1;
+    while (test_and_set(&(m->lock)))
+    {
+        if (m->active == 0) return -1; 
+        task_yield();
+    }
+    return 0;
+}
+/*
+int mutex_lock(mutex_t *m)
+{
+    if (m == NULL) return -1;
+    if (m->active == 0) return -1;
     while (__atomic_test_and_set(&(m->lock), __ATOMIC_SEQ_CST))
     {
         if (m->active == 0) return -1; 
@@ -36,6 +185,7 @@ int mutex_lock(mutex_t *m)
     }
     return 0;
 }
+*/
 
 int mutex_unlock(mutex_t *m)
 {
@@ -49,64 +199,6 @@ int mutex_destroy(mutex_t *m)
 {
     if (m == NULL) return -1;
     m->active = 0;
-    return 0;
-}
-
-int sem_create(semaphore_t *s, int value)
-{
-    if (s == NULL) return -1;
-    s->queue = NULL;
-    s->count = value;
-    s->active = 1;
-    
-    if (mutex_create(&s->mutex) != 0)
-        return -1;
-    return 0;  
-}
-
-int sem_down(semaphore_t *s)
-{
-    if (s == NULL) return -1;
-    if (s->active == 0) return -1;
-    
-    if(mutex_lock(&s->mutex) == -1) return -1;
-
-    before_sem_down(s);
-
-    s->count--;
-    if (s->count < 0) {
-        task_suspend(taskExec, (task_t**)&(s->queue));
-        if(mutex_unlock(&s->mutex) == -1) return -1;
-        task_yield();
-        return 0;
-    }
-    if(mutex_unlock(&s->mutex) == -1) return -1;
-
-    after_sem_down(s);
-    return 0;
-}
-
-int sem_up(semaphore_t *s)
-{
-    if (s == NULL) return -1;
-    if (mutex_lock(&s->mutex)) return -1;
-
-    s->count++;
-    if (s->count <= 0) {
-        task_resume(s->queue);
-    }
-    mutex_unlock(&s->mutex);
-    return 0;
-}
-
-int sem_destroy(semaphore_t *s)
-{
-    if (s == NULL) return -1;
-    if (mutex_destroy(&s->mutex) == -1) return -1;
-    while(s->queue != NULL){
-        task_resume(s->queue);
-    }
-    s->active = 0;        
     return 0;
 }
 

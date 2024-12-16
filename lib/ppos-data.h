@@ -11,6 +11,8 @@
 #include <ucontext.h>		// biblioteca POSIX de trocas de contexto
 #include "queue.h"		// biblioteca de filas genéricas
 
+#define PREEMPT_MODE
+
 struct mutex_t;
 // Estrutura que define um Task Control Block (TCB)
 typedef struct task_t
@@ -34,16 +36,22 @@ typedef struct task_t
 
 // estrutura que define um mutex
 typedef struct {
-	int lock;
+	volatile int lock;
     int active;
 } mutex_t ;
 
 // estrutura que define um semáforo
-typedef struct {
-	int count;
+typedef struct
+{
+	
 	task_t* queue;
-	mutex_t mutex;
     int active;
+    int value;
+    union{
+        signed long long int64_size;
+        mutex_t mutex;
+    }mutex_union;
+    mutex_t mutex_tmp;
 } semaphore_t ;
 
 // estrutura que define uma barreira

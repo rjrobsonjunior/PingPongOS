@@ -1,4 +1,4 @@
-MSain INICIO
+Main INICIO
 Task A1 created...
 Task A2 created...
 Task B1 created...
@@ -31,27 +31,28 @@ Iniciando:                              B2
 [000001]                              B2 zag (3)
 [000001] A1 zig (4)
 [000001]                          B1 zag (4)
-[000002]                              B2 zag (4)
-[000002] A1 zig (5)
-[000002]                          B1 zag (5)
-[000002]     A2 zig (5)
-[000002]                              B2 zag (5)
-[000002] A1 zig (6)
-[000002]                          B1 zag (6)
-[000002]     A2 zig (6)
-[000002]                              B2 zag (6)
-[000002] A1 zig (7)
-[000002]                          B1 zag (7)
-[000002]     A2 zig (7)
-[000002]                              B2 zag (7)
-[000002] A1 zig (8)
-[000002]                          B1 zag (8)
-[000002]     A2 zig (8)
-[000002]                              B2 zag (8)
-[000002] A1 zig (9)
-[000002]                          B1 zag (9)
-[000002]     A2 zig (9)Main waits for A2...
+[000001]     A2 zig (4)
+[000001]                              B2 zag (4)
+[000001] A1 zig (5)
+[000001]                          B1 zag (5)
+[000001]     A2 zig (5)
+[000001]                              B2 zag (5)
+[000001] A1 zig (6)
+[000001]                          B1 zag (6)
+[000001]     A2 zig (6)
+[000001]                              B2 zag (6)
+[000001] A1 zig (7)
+[000001]                          B1 zag (7)
+[000001]     A2 zig (7)
+[000001]                              B2 zag (7)
+[000001] A1 zig (8)
+[000001]                          B1 zag (8)
+[000001]     A2 zig (8)
+[000001]                              B2 zag (8)
+[000001] A1 zig (9)
+[000001]                          B1 zag (9)
+[000001]     A2 zig (9)Main waits for A2...
 
-[000002]                              B2 zag (9)Main waits for B1...
+[000001]                              B2 zag (9)Main waits for B1...
 Main waits for B2...
 Main FIM

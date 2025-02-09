@@ -43,15 +43,14 @@ typedef struct {
 // estrutura que define um semáforo
 typedef struct
 {
-	
 	task_t* queue;
     int active;
-    int value;
+
     union{
-        signed long long int64_size;
-        mutex_t mutex;
+        char int64_size;
+        char mutex;
     }mutex_union;
-    mutex_t mutex_tmp;
+        char value;
 } semaphore_t ;
 
 // estrutura que define uma barreira

@@ -1,0 +1,14 @@
+Inicialmente foi copulada a estrutura do mutex e semaforo
+Funções before e after não foram modificadas, foram usadas apenas para fim de debugger
+Para a implementação do semáforo e mutex foram adotadas duas abordagem:
+
+- a primeira, o controle do semáforo seria intermediado por um mutex, implementado usando fuções atômicas
+nativas do sistema operacional, e o semáforo gerenciaria o recurso processamente. Para essa aborgem foi 
+obitido sucesso no teste de pinpong-semaphore e pingpong-racecond, já no pingpong-mqueue não funcionou 
+porque a implementação do queue igora dados da estrutura do semaphore_t a partir de um desterminado tamanho
+
+- a segunda foi deabilitar preempção sempre que um processo requisita o uso do semáforo, e o mesmo desemprenha
+a mesma função que na anterior
+
+para habilitar o modo da preempção basta definir a macro PREEMPT_MODE em ppos-data (já está definido) e para o uso do mutex
+não definir a macro

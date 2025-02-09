@@ -147,6 +147,7 @@ queue_t* dequeue(queue_t **queue);
 
 int test_and_set (volatile int *lock)
 {
+
     PPOS_PREEMPT_DISABLE;
     int old = *lock;
     *lock = 1;
@@ -236,8 +237,8 @@ int queue_contains(queue_t **queue, int id)
 	}
 	while(queue_head != queue_it);
 	return 0;
-} */
-/*
+} 
+
 void imprimir(queue_t *queue){
 	if(queue == NULL)
 		return 0;
@@ -250,8 +251,8 @@ void imprimir(queue_t *queue){
 		queue = queue->next;
 	}
 	while(queue!=it);
-} */
-
+} 
+*/
 
 
 void before_ppos_init () {

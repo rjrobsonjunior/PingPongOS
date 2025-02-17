@@ -4,7 +4,8 @@
         "time.h": "c",
         "ppos-disk-manager.h": "c",
         "ppos-core-globals.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "string.h": "c"
     },
     "editor.fontSize": 12
 }
